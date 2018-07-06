@@ -239,63 +239,64 @@ class Generator(Serializable):
             add.append(E("route", id="route%s" % edge, edges=" ".join(route)))
 
         # add (optionally) the traffic light properties to the .add.xml file
-        if traffic_lights.num_traffic_lights > 0:
-            if traffic_lights.baseline:
-                tl_type = str(traffic_lights["tl_type"])
-                program_id = str(traffic_lights["program_id"])
-                phases = traffic_lights["phases"]
-                max_gap = str(traffic_lights["max_gap"])
-                detector_gap = str(traffic_lights["detector_gap"])
-                show_detector = traffic_lights["show_detectors"]
+        if traffic_lights.baseline:
+            defaults = traffic_lights.actuated_default()
+            tl_type = str(defaults["tl_type"])
+            program_id = str(defaults["program_id"])
+            max_gap = str(defaults["max_gap"])
+            detector_gap = str(defaults["detector_gap"])
+            show_detector = defaults["show_detectors"]
+            phases = defaults["phases"]
 
-                detectors = {"key": "detector-gap", "value": detector_gap}
-                gap = {"key": "max-gap", "value": max_gap}
+            detectors = {"key": "detector-gap", "value": detector_gap}
+            gap = {"key": "max-gap", "value": max_gap}
 
-                if show_detector:
-                    show_detector = {"key": "show-detectors", "value": "true"}
-                else:
-                    show_detector = {"key": "show-detectors", "value": "false"}
-
-                # FIXME(ak): add abstract method
-                nodes = self.specify_tll(net_params)
-                tll = []
-                for node in nodes:
-                    tll.append({"id": node['id'], "type": tl_type,
-                                "programID": program_id})
-
-                for elem in tll:
-                    e = E("tlLogic", **elem)
-                    e.append(E("param", **show_detector))
-                    e.append(E("param", **gap))
-                    e.append(E("param", **detectors))
-                    for phase in phases:
-                        e.append(E("phase", **phase))
-                    add.append(e)
-
+            if show_detector:
+                show_detector = {"key": "show-detectors", "value": "true"}
             else:
-                tl_properties = traffic_lights.get_properties()
-                for node in tl_properties.values():
-                    # at this point, the generator assumes that traffic lights
-                    # are properly formed. If there are no phases for a static
-                    # traffic light, ignore and use default
-                    if node["type"] == "static" and not node.get("phases"):
-                        continue
+                show_detector = {"key": "show-detectors", "value": "false"}
 
-                    elem = {"id": str(node["id"]), "type": str(node["type"]),
-                            "programID": str(node["programID"])}
-                    if node.get("offset"):
-                        elem["offset"] = str(node.get("offset"))
+            # FIXME(ak): add abstract method
+            nodes = self.specify_tll(net_params)
+            tll = []
+            for node in nodes:
+                tll.append({"id": node['id'], "type": tl_type,
+                            "programID": program_id})
 
-                    e = E("tlLogic", **elem)
-                    for key, value in node.items():
-                        if key == "phases":
-                            for phase in node.get("phases"):
-                                e.append(E("phase", **phase))
-                        else:
-                            e.append(E("param",
-                                       **{"key": key, "value": str(value)}))
+            for elem in tll:
+                e = E("tlLogic", **elem)
+                e.append(E("param", **show_detector))
+                e.append(E("param", **gap))
+                e.append(E("param", **detectors))
+                for phase in phases:
+                    e.append(E("phase", **phase))
+                add.append(e)
 
-                    add.append(e)
+        elif traffic_lights.num_traffic_lights > 0:
+    
+            tl_properties = traffic_lights.get_properties()
+            for node in tl_properties.values():
+                # at this point, the generator assumes that traffic lights
+                # are properly formed. If there are no phases for a static
+                # traffic light, ignore and use default
+                if node["type"] == "static" and not node.get("phases"):
+                    continue
+
+                elem = {"id": str(node["id"]), "type": str(node["type"]),
+                        "programID": str(node["programID"])}
+                if node.get("offset"):
+                    elem["offset"] = str(node.get("offset"))
+
+                e = E("tlLogic", **elem)
+                for key, value in node.items():
+                    if key == "phases":
+                        for phase in node.get("phases"):
+                            e.append(E("phase", **phase))
+                    else:
+                        e.append(E("param",
+                                    **{"key": key, "value": str(value)}))
+
+                add.append(e)
 
         printxml(add, self.cfg_path + addfn)
 
