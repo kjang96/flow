@@ -69,7 +69,7 @@ class Scenario(Serializable):
         # create the network configuration file from the generator
         self._edges, self._connections = self.generator.generate_net(
             self.net_params, self.traffic_lights)
-
+        print("debug: net is generated")
         # list of edges and internal links (junctions)
         self._edge_list = [edge_id for edge_id in self._edges.keys()
                            if edge_id[0] != ":"]
@@ -77,6 +77,7 @@ class Scenario(Serializable):
                                    set(self._edge_list))
 
         # maximum achievable speed on any edge in the network
+        print(self.get_edge_list()) #debug
         self.max_speed = max(self.speed_limit(edge)
                              for edge in self.get_edge_list())
 

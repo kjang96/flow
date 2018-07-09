@@ -62,15 +62,15 @@ def get_non_flow_params(enter_speed, additional_net_params):
 
 def run_task(*_):
     v_enter = 10
-    inner_length = 300
-    long_length = 100
-    short_length = 300
-    n = 3
-    m = 3
-    num_cars_left = 1
-    num_cars_right = 1
-    num_cars_top = 1
-    num_cars_bot = 1
+    inner_length = 200
+    long_length = 200
+    short_length = 200
+    n = 2
+    m = 2
+    num_cars_left = 5
+    num_cars_right = 5
+    num_cars_top = 5
+    num_cars_bot = 5
     tot_cars = (num_cars_left + num_cars_right) * m \
         + (num_cars_bot + num_cars_top) * n
 
@@ -80,7 +80,7 @@ def run_task(*_):
                   "cars_top": num_cars_top, "cars_bot": num_cars_bot}
 
     sumo_params = SumoParams(sim_step=1,
-                             sumo_binary="sumo-gui")
+                             sumo_binary="sumo")
 
     vehicles = Vehicles()
     vehicles.add(veh_id="idm",
@@ -113,6 +113,7 @@ def run_task(*_):
                                   traffic_lights=tl_logic)
 
     env_name = "PO_TrafficLightGridEnv"
+    # env_name = "TrafficLightGridEnv"
     pass_params = (env_name, sumo_params, vehicles, env_params, net_params,
                    initial_config, scenario)
 
@@ -131,28 +132,30 @@ def run_task(*_):
         env=env,
         policy=policy,
         baseline=baseline,
-        batch_size=40000,
+        # batch_size=40000,
+        batch_size=1000,
         max_path_length=horizon,
         # whole_paths=True,
-        n_itr=800,
+        # n_itr=200,
+        n_itr=2,
         discount=0.999,
         # step_size=0.01,
     )
     algo.train()
 
-
-for seed in [6]:  # , 7, 8]:
+# for seed in [6]:  # , 7, 8]:
+for seed in [6, 7, 8, 9]:  # , 7, 8]:
     run_experiment_lite(
         run_task,
         # Number of parallel workers for sampling
-        n_parallel=1,
+        n_parallel=8,
         # n_parallel=1,
         # Only keep the snapshot parameters for the last iteration
         snapshot_mode="all",
         # Specifies the seed for the experiment. If this is not provided, a
         # random seed will be used
         seed=seed,
-        mode="local",  # "local_docker", "ec2"
-        exp_prefix="green-wave",
+        mode="ec2",  # "local_docker", "ec2"
+        exp_prefix="89",
         # plot=True,
     )
