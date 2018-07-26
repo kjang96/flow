@@ -105,6 +105,8 @@ def run_task(*_):
     initial_config, net_params = get_flow_params(10, 300, n, m,
                                                  additional_net_params)
 
+    # initial_config, net_params = get_non_flow_params(v_enter, additional_net_params)
+
     scenario = SimpleGridScenario(name="grid-intersection",
                                   generator_class=SimpleGridGenerator,
                                   vehicles=vehicles,
@@ -132,12 +134,12 @@ def run_task(*_):
         env=env,
         policy=policy,
         baseline=baseline,
-        # batch_size=40000,
-        batch_size=1000,
+        batch_size=15000,
+        # batch_size=1000,
         max_path_length=horizon,
         # whole_paths=True,
-        # n_itr=200,
-        n_itr=2,
+        n_itr=400,
+        # n_itr=2,
         discount=0.999,
         # step_size=0.01,
     )
@@ -151,11 +153,11 @@ for seed in [6, 7, 8, 9]:  # , 7, 8]:
         n_parallel=8,
         # n_parallel=1,
         # Only keep the snapshot parameters for the last iteration
-        snapshot_mode="all",
+        snapshot_mode="last",
         # Specifies the seed for the experiment. If this is not provided, a
         # random seed will be used
         seed=seed,
         mode="ec2",  # "local_docker", "ec2"
-        exp_prefix="89",
+        exp_prefix="92",
         # plot=True,
     )
