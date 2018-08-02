@@ -239,7 +239,7 @@ class Generator(Serializable):
             add.append(E("route", id="route%s" % edge, edges=" ".join(route)))
 
         # add (optionally) the traffic light properties to the .add.xml file
-        if traffic_lights.baseline:
+        if traffic_lights and traffic_lights.baseline:
             defaults = traffic_lights.actuated_default()
             tl_type = str(defaults["tl_type"])
             program_id = str(defaults["program_id"])
@@ -272,7 +272,7 @@ class Generator(Serializable):
                     e.append(E("phase", **phase))
                 add.append(e)
 
-        elif traffic_lights.num_traffic_lights > 0:
+        elif traffic_lights and traffic_lights.num_traffic_lights > 0:
     
             tl_properties = traffic_lights.get_properties()
             for node in tl_properties.values():
