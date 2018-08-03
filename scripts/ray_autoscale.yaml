@@ -68,18 +68,18 @@ worker_nodes:
 
 file_mounts: {
 # path to your repo and the desired branch name
-#"/tmp/foo": "<PATH TO LEARNING TRAFFIC>/.git/refs/heads/<BRANCH NAME>",
-#"/tmp/foo2": "<PATH TO RAY_AUTOSCALER_KEY>",
-"/tmp/foo": "/Users/kathyjang/research/rllab-multiagent/learning-traffic/.git/refs/heads/master",
-"/tmp/foo2": "/Users/kathyjang/.ssh/ray-autoscaler_2_us-west-1.pem",
+#"/tmp/path": "<PATH TO LEARNING TRAFFIC>/.git/refs/heads/<BRANCH NAME>",
+#"/tmp/ray_autoscaler_key": "<PATH TO RAY_AUTOSCALER_KEY>",
+"/tmp/path": "/Users/kathyjang/research/rllab-multiagent/learning-traffic/.git/refs/heads/master",
+"/tmp/ray_autoscaler_key": "/Users/kathyjang/.ssh/ray-autoscaler_2_us-west-1.pem",
 }
 
 setup_commands:
     # checkout your desired branch on all worker nodes
     # - cd learning-traffic && GIT_SSH_COMMAND="ssh -i ~/ray_bootstrap_key.pem" git fetch
-    - cd /tmp && cp foo2 ~/ray_autoscaler_key.pem
-    - cd flow-devel && GIT_SSH_COMMAND="ssh -i ~/ray_autoscaler_key.pem" git fetch  && GIT_SSH_COMMAND="ssh -i ~/ray_autoscaler_key.pem" git checkout `cat /tmp/foo`
-    - cd ray && git fetch eugene_upstream && git checkout add_ars && git pull  # this is the branch of rllib
+    - cd /tmp && cp ray_autoscaler_key ~/ray_autoscaler_key.pem
+    - cd flow-devel && GIT_SSH_COMMAND="ssh -i ~/ray_autoscaler_key.pem" git fetch  && GIT_SSH_COMMAND="ssh -i ~/ray_autoscaler_key.pem" git checkout `cat /tmp/path`
+    - cd ray && git fetch eugene_upstream && git checkout add_ars && git pull
     - echo 'export PATH="/home/ubuntu/sumo/bin:$PATH"' >> ~/.bashrc
     - echo 'export SUMO_HOME="/home/ubuntu/sumo"' >> ~/.bashrc
     - echo 'export PYTHONPATH="/home/ubuntu/sumo/tools:$PYTHONPATH"' >> ~/.bashrc
