@@ -40,9 +40,13 @@ class SimpleGridGenerator(Generator):
         rts = {}
         row_num = self.grid_array["row_num"]
         col_num = self.grid_array["col_num"]
+
+        # horizontal
         for i in range(row_num):
             route_arr_bot = []
             route_arr_top = []
+            # rts.update({"bot" + str(i) + '_' + str(col_num): ["bot" + str(i) + '_' + str(col_num)]})
+            # rts.update({"top" + str(i) + '_' + str(0): ["top" + str(i) + '_' + str(0)]})
             for j in range(col_num + 1):
                 route_arr_bot += ["bot" + str(i) + '_' + str(j)]
                 route_arr_top += ["top" + str(i) + '_' + str(col_num - j)]
@@ -52,6 +56,8 @@ class SimpleGridGenerator(Generator):
         for i in range(col_num):
             route_arr_left = []
             route_arr_right = []
+            # rts.update({"right" + str(row_num) + '_' + str(i): ["right" + str(row_num) + '_' + str(i)]})
+            # rts.update({"left" + str(0) + '_' + str(i): ["left" + str(0) + '_' + str(i)]})
             for j in range(row_num + 1):
                 route_arr_right += ["right" + str(j) + '_' + str(i)]
                 route_arr_left += ["left" + str(row_num - j) + '_' + str(i)]
@@ -202,11 +208,11 @@ class SimpleGridGenerator(Generator):
     def _build_inner_edges(self):
         """Builds the inner edges.
 
-        First we build all of the column edges. For the upper edge, it would be
+        First we build all of the column edges. For the vertical edges, it would be
         called right_i_j or left_i_j where i is the row number and j is the
         column to the right of it.
 
-        For the vertical edges the notation would be bot_i_j or top_i_j where
+        For the horizontal edges the notation would be bot_i_j or top_i_j where
         i is the row above it, and j is the column number.
 
         INDEXED FROM ZERO.

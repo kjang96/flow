@@ -3,6 +3,7 @@ import re
 
 from gym.spaces.box import Box
 from gym.spaces.tuple_space import Tuple
+from gym.spaces.discrete import Discrete
 
 from flow.core import rewards
 from flow.envs.base_env import Env
@@ -12,7 +13,8 @@ ADDITIONAL_ENV_PARAMS = {
     "switch_time": 2.0,
     # whether the traffic lights should be actuated by sumo or RL
     # options are "controlled" and "actuated"
-    "tl_type": "controlled"
+    "tl_type": "controlled",
+    "target_velocity": 10,
 }
 
 
@@ -89,7 +91,7 @@ class TrafficLightGridEnv(Env):
                 if key in edge:
                     self.edge_mapping[key].append(i)
                     break
-
+ 
     @property
     def action_space(self):
         return Box(low=0, high=1, shape=(self.num_traffic_lights,),
@@ -387,12 +389,14 @@ class PO_TrafficLightGridEnv(TrafficLightGridEnv):
 
         # number of vehicles nearest each intersection that is observed in the
         # state space; defaults to 2
+
         self.num_observed = env_params.additional_params.get("num_observed", 2)
 
-        # used while computing the reward
-        self.env_params.additional_params["target_velocity"] = \
-            max(self.scenario.speed_limit(edge)
-                for edge in self.scenario.get_edge_list())
+        # KJ why is this not the target velocity passed in via env params..?
+        # used while computing the reward 
+        # self.env_params.additional_params["target_velocity"] = \
+        #     max(self.scenario.speed_limit(edge)
+        #         for edge in self.scenario.get_edge_list())
 
         # used during visualization
         self.observed_ids = []
@@ -464,9 +468,10 @@ class PO_TrafficLightGridEnv(TrafficLightGridEnv):
                 density += [0]
                 velocity_avg += [0]
         self.observed_ids = all_observed_ids
-        return np.array(np.concatenate([speeds, dist_to_intersec, edge_number,
+        state = np.array(np.concatenate([speeds, dist_to_intersec, edge_number,
                                         density, velocity_avg,
                                         self.last_change.flatten().tolist()]))
+        return state
 
     def compute_reward(self, state, rl_actions, **kwargs):
         if self.env_params.evaluate:
