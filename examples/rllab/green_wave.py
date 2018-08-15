@@ -106,10 +106,11 @@ def run_task(*_):
                  speed_mode="all_checks")
 
     tl_logic = TrafficLights(baseline=False)
-    
-    # want min switch time to be ~4
+
     additional_env_params = {"target_velocity": target_velocity, "num_steps": num_steps,
-                             "switch_time": switch_time, "num_observed": num_observed}
+                             "min_yellow_time": 4.0, "min_green_time": 8.0,
+                             "num_observed": num_observed}
+
     env_params = EnvParams(additional_params=additional_env_params)
 
     additional_net_params = {"speed_limit": speed_limit, "grid_array": grid_array,
