@@ -9,6 +9,7 @@ from flow.core.traffic_lights import TrafficLights
 from flow.core.experiment import SumoExperiment
 from flow.controllers.routing_controllers import GridRouter
 from flow.controllers.car_following_models import IDMController
+from flow.envs.green_wave_env import PO_TrafficLightGridEnv
 
 os.environ["TEST_FLAG"] = "True"
 
@@ -192,6 +193,45 @@ class TestPOEnv(unittest.TestCase):
 
         for veh_id in k_closest:
             self.assertTrue(self.env.vehicles.get_edge(veh_id) in c0_edges)
+
+
+    def test_min_switch(self):
+        # FOR THE PURPOSES OF THIS TEST, never set min switch to be < 2
+
+        # reset the environment
+        self.env.reset()
+
+        # Set up RL environment
+        self.env = PO_TrafficLightGridEnv(self.env.env_params,
+                                          self.env.sumo_params,
+                                          self.env.scenario)
+        
+        for i in range(len(self.env.last_change)):
+            self.assertEqual(self.env.last_change[i, 2], 1)
+        
+        # Run one step and make sure the count is incrementing
+        self.env.step([1] * self.env.num_traffic_lights)
+        for i in range(len(self.env.last_change)):
+            self.assertEqual(self.env.last_change[i, 0], 1)
+            self.assertEqual(self.env.last_change[i, 1], 0)
+            self.assertEqual(self.env.last_change[i, 2], 1)
+
+        # Run until green switches to yellow
+        for i in range(int(self.env.min_green_time - 1.)):
+            self.env.step([1] * self.env.num_traffic_lights)
+        for i in range(len(self.env.last_change)):
+            self.assertEqual(self.env.last_change[i, 0], 0)
+            self.assertEqual(self.env.last_change[i, 1], 1)
+            self.assertEqual(self.env.last_change[i, 2], 0)
+
+        # Run until yellow switches to green
+        for i in range(int(self.env.min_yellow_time)):
+            self.env.step([1] * self.env.num_traffic_lights)
+
+        for i in range(len(self.env.last_change)):
+            self.assertEqual(self.env.last_change[i, 0], 0)
+            self.assertEqual(self.env.last_change[i, 1], 1)
+            self.assertEqual(self.env.last_change[i, 2], 1)
 
 
 class TestItRuns(unittest.TestCase):

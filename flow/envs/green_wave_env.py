@@ -9,8 +9,10 @@ from flow.core import rewards
 from flow.envs.base_env import Env
 
 ADDITIONAL_ENV_PARAMS = {
-    # minimum switch time for each traffic light (in seconds)
-    "switch_time": 2.0,
+    # minimum switch time for a traffic light in the yellow phase (in seconds)
+    "min_yellow_time": 2.0,
+    # minimum switch time for a traffic light in the green phase (in seconds)
+    "min_green_time": 8.0,
     # whether the traffic lights should be actuated by sumo or RL
     # options are "controlled" and "actuated"
     "tl_type": "controlled",
@@ -76,11 +78,13 @@ class TrafficLightGridEnv(Env):
         # keeps track of the last time the light was allowed to change.
         self.last_change = np.zeros((self.rows * self.cols, 3))
 
-        # when this hits min_switch_time we change from yellow to red
+        # When this hits min_yellow_time we can change from yellow to red.
+        # When this hits min_green_time, we can change from green to yellow.
         # the second column indicates the direction that is currently being
         # allowed to flow. 0 is flowing top to bottom, 1 is left to right
         # For third column, 0 signifies yellow and 1 green or red
-        self.min_switch_time = env_params.additional_params["switch_time"]
+        self.min_yellow_time = env_params.additional_params["min_yellow_time"]
+        self.min_green_time = env_params.additional_params["min_green_time"]
 
         if self.tl_type != "actuated":
             for i in range(self.rows * self.cols):
@@ -156,7 +160,7 @@ class TrafficLightGridEnv(Env):
             # should switch to red
             if self.last_change[i, 2] == 0:  # currently yellow
                 self.last_change[i, 0] += self.sim_step
-                if self.last_change[i, 0] >= self.min_switch_time:
+                if self.last_change[i, 0] >= self.min_yellow_time:
                     if self.last_change[i, 1] == 0:
                         self.traffic_lights.set_state(
                             node_id='center{}'.format(i),
@@ -165,9 +169,11 @@ class TrafficLightGridEnv(Env):
                         self.traffic_lights.set_state(
                             node_id='center{}'.format(i),
                             state='rrrGGGrrrGGG', env=self)
+                    self.last_change[i, 0] = 0.0
                     self.last_change[i, 2] = 1
-            else:
-                if action:
+            else: # currently green
+                self.last_change[i, 0] += self.sim_step
+                if self.last_change[i, 0] >= self.min_green_time and rl_mask[i]:
                     if self.last_change[i, 1] == 0:
                         self.traffic_lights.set_state(
                             node_id='center{}'.format(i),
@@ -179,6 +185,7 @@ class TrafficLightGridEnv(Env):
                     self.last_change[i, 0] = 0.0
                     self.last_change[i, 1] = not self.last_change[i, 1]
                     self.last_change[i, 2] = 0
+                
 
     def compute_reward(self, state, rl_actions, **kwargs):
         return rewards.penalize_tl_changes(rl_actions >= 0.5, gain=1.0)
