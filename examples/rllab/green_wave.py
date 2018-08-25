@@ -61,18 +61,6 @@ def get_non_flow_params(enter_speed, additional_net_params):
 
 
 def run_task(*_):
-<<<<<<< Updated upstream
-    v_enter = 10
-    inner_length = 300
-    long_length = 100
-    short_length = 300
-    n = 3
-    m = 3
-    num_cars_left = 1
-    num_cars_right = 1
-    num_cars_top = 1
-    num_cars_bot = 1
-=======
     v_enter = 20
     inner_length = 200
     long_length = 200
@@ -83,7 +71,6 @@ def run_task(*_):
     num_cars_right = 10
     num_cars_top = 10
     num_cars_bot = 10
->>>>>>> Stashed changes
     tot_cars = (num_cars_left + num_cars_right) * m \
         + (num_cars_bot + num_cars_top) * n
 
@@ -108,13 +95,8 @@ def run_task(*_):
 
     tl_logic = TrafficLights(baseline=False)
 
-<<<<<<< Updated upstream
-    additional_env_params = {"target_velocity": 50, "num_steps": 500,
-                             "switch_time": 3.0}
-=======
     additional_env_params = {"target_velocity": 20, "num_steps": 500,
                              "min_yellow_time": 4.0, "min_green_time": 8.0}
->>>>>>> Stashed changes
     env_params = EnvParams(additional_params=additional_env_params)
 
     additional_net_params = {"speed_limit": 35, "grid_array": grid_array,
