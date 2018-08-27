@@ -56,6 +56,7 @@ class TrafficLightGridEnv(Env):
         self.grid_array = scenario.net_params.additional_params["grid_array"]
         self.rows = self.grid_array["row_num"]
         self.cols = self.grid_array["col_num"]
+        self.velocities = []
         # self.num_observed = self.grid_array.get("num_observed", 3)
         self.num_traffic_lights = self.rows * self.cols
         self.tl_type = env_params.additional_params.get('tl_type')
@@ -116,6 +117,7 @@ class TrafficLightGridEnv(Env):
         return Tuple((speed, dist_to_intersec, edge_num, traffic_lights))
 
     def get_state(self):
+        # import ipdb; ipdb.set_trace()
         # compute the normalizers
         max_dist = max(self.scenario.short_length,
                        self.scenario.long_length,
@@ -134,6 +136,7 @@ class TrafficLightGridEnv(Env):
         return np.array(state)
 
     def _apply_rl_actions(self, rl_actions):
+        # import ipdb; ipdb.set_trace()
 
         if self.env_params.evaluate:
             return
@@ -428,6 +431,7 @@ class PO_TrafficLightGridEnv(TrafficLightGridEnv):
         light and for each vehicle its velocity, distance to intersection,
         edge_number traffic light state. This is partially observed
         """
+        # import ipdb; ipdb.set_trace()
         speeds = []
         dist_to_intersec = []
         edge_number = []
@@ -484,11 +488,15 @@ class PO_TrafficLightGridEnv(TrafficLightGridEnv):
         if self.env_params.evaluate:
             return rewards.min_delay_unscaled(self)
         else:
-            return rewards.desired_velocity(self, fail=kwargs["fail"])
+            reward = rewards.desired_velocity(self, fail=kwargs["fail"]) \
+            + rewards.penalize_tl_changes(rl_actions >= 0.5, gain=1.0) 
+            # print("REWARD IS: ", reward)
+            return reward
 
     def additional_command(self):
         # specify observed vehicles
         [self.vehicles.set_observed(veh_id) for veh_id in self.observed_ids]
+        self.velocities.append(np.mean(self.vehicles.get_speed(self.vehicles.get_ids())))
 
 
 class GreenWaveTestEnv(TrafficLightGridEnv):

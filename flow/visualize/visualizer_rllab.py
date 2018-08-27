@@ -11,7 +11,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('file', type=str,
                         help='path to the snapshot file')
-    parser.add_argument('--num_rollouts', type=int, default=100,
+    parser.add_argument('--num_rollouts', type=int, default=2,
                         help='Number of rollouts we will average over')
     parser.add_argument('--plotname', type=str, default="traffic_plot",
                         help='Prefix for all generated plots')
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # Set sumo to make a video
     sumo_params = unwrapped_env.sumo_params
     sumo_params.emission_path = "./test_time_rollout/"
-    sumo_binary = 'sumo-gui'
+    sumo_binary = 'sumo'
     unwrapped_env.restart_sumo(sumo_params=sumo_params,
                                sumo_binary=sumo_binary)
 
@@ -55,6 +55,7 @@ if __name__ == "__main__":
     for j in range(args.num_rollouts):
         # run a single rollout of the experiment
         path = rollout(env=env, agent=policy)
+        # import ipdb; ipdb.set_trace()
 
         # collect the observations and rewards from the rollout
         new_obs = path['observations']
@@ -66,6 +67,8 @@ if __name__ == "__main__":
         print("Round {}, return: {}".format(j, sum(new_rewards)))
         rew.append(sum(new_rewards))
 
+    avg_vel = np.mean(unwrapped_env.velocities)
+    import ipdb; ipdb.set_trace()
     # print the average cumulative reward across rollouts
     print("Average, std return: {}, {}".format(np.mean(rew), np.std(rew)))
 

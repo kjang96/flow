@@ -121,6 +121,8 @@ def run_task(*_):
     initial_config, net_params = get_flow_params(v_enter, inflow_rate, n, m, additional_net_params,
                                                  inflow_prob=inflow_prob)
 
+    # initial_config, net_params = get_non_flow_params(v_enter, additional_net_params)
+
     scenario = SimpleGridScenario(name="grid-intersection",
                                   generator_class=SimpleGridGenerator,
                                   vehicles=vehicles,
@@ -129,6 +131,7 @@ def run_task(*_):
                                   traffic_lights=tl_logic)
 
     env_name = "PO_TrafficLightGridEnv"
+    # env_name = "TrafficLightGridEnv"
     pass_params = (env_name, sumo_params, vehicles, env_params, net_params,
                    initial_config, scenario)
 
@@ -159,7 +162,7 @@ def run_task(*_):
 
 
 # for seed in [6]:  # , 7, 8]:
-for seed in [6, 7, 8]:
+for seed in [6, 7]:#, 8]:
     run_experiment_lite(
         run_task,
         # Number of parallel workers for sampling
@@ -171,6 +174,6 @@ for seed in [6, 7, 8]:
         # random seed will be used
         seed=seed,
         mode="ec2",  # "local_docker", "ec2"
-        exp_prefix="96",
+        exp_prefix="103",
         # plot=True,
     )

@@ -20,9 +20,9 @@ from flow.controllers import SumoCarFollowingController, GridRouter
 # time horizon of a single rollout
 HORIZON = 500
 # number of rollouts per training iteration
-N_ROLLOUTS = 30
+N_ROLLOUTS = 20
 # number of parallel workers
-PARALLEL_ROLLOUTS = 8
+PARALLEL_ROLLOUTS = 2
 
 
 def gen_edges(row_num, col_num):
@@ -47,7 +47,7 @@ def get_flow_params(col_num, row_num, additional_net_params):
     inflow = InFlows()
     outer_edges = gen_edges(col_num, row_num)
     for i in range(len(outer_edges)):
-        inflow.add(veh_type="idm", edge=outer_edges[i], vehs_per_hour=300,
+        inflow.add(veh_type="idm", edge=outer_edges[i], vehs_per_hour=350,
                    departLane="free", departSpeed=20)
         # inflow.add(veh_type="idm", edge=outer_edges[i], probability=1/12,
         #            departLane="free", departSpeed=20)
@@ -127,7 +127,7 @@ initial_config, net_params = \
 
 flow_params = dict(
     # name of the experiment
-    exp_tag="98",
+    exp_tag="100",
 
     # name of the flow environment the experiment is running on
     env_name="PO_TrafficLightGridEnv",
@@ -141,7 +141,7 @@ flow_params = dict(
     # sumo-related parameters (see flow.core.params.SumoParams)
     sumo=SumoParams(
         sim_step=1,
-        sumo_binary="sumo",
+        sumo_binary="sumo-gui",
     ),
 
     # environment related parameters (see flow.core.params.EnvParams)
@@ -165,21 +165,33 @@ flow_params = dict(
 
 
 if __name__ == "__main__":
-    ray.init(num_cpus=PARALLEL_ROLLOUTS, redirect_output=True)
+    ray.init(num_cpus=PARALLEL_ROLLOUTS, redirect_output=False)
 
-    config = ppo.DEFAULT_CONFIG.copy()
+    # config = ppo.DEFAULT_CONFIG.copy()
+    # config["num_workers"] = PARALLEL_ROLLOUTS
+    # config["timesteps_per_batch"] = HORIZON * N_ROLLOUTS
+    # config["gamma"] = 0.999  # discount rate
+    # config["model"].update({"fcnet_hiddens": [32, 32]})
+    # config["sgd_batchsize"] = min(16 * 1024, config["timesteps_per_batch"])
+    # config["kl_target"] = 0.02
+    # config["num_sgd_iter"] = 30
+    # config["sgd_stepsize"] = 5e-5
+    # config["observation_filter"] = "NoFilter"
+    # config["use_gae"] = True
+    # config["clip_param"] = 0.2
+    # config["horizon"] = HORIZON
+
+    # changes start
+
+    config = es.DEFAULT_CONFIG.copy()
     config["num_workers"] = PARALLEL_ROLLOUTS
+    config["episodes_per_batch"] = N_ROLLOUTS # confirm
     config["timesteps_per_batch"] = HORIZON * N_ROLLOUTS
-    config["gamma"] = 0.999  # discount rate
-    config["model"].update({"fcnet_hiddens": [32, 32]})
-    config["sgd_batchsize"] = min(16 * 1024, config["timesteps_per_batch"])
-    config["kl_target"] = 0.02
-    config["num_sgd_iter"] = 30
-    config["sgd_stepsize"] = 5e-5
-    config["observation_filter"] = "NoFilter"
-    config["use_gae"] = True
-    config["clip_param"] = 0.2
-    config["horizon"] = HORIZON
+    config["stepsize"] = 1
+    # config["noise_size"] = 2500000
+
+
+    # changes end 
 
     # save the flow params for replay
     flow_json = json.dumps(flow_params, cls=FlowParamsEncoder, sort_keys=True,
@@ -195,20 +207,22 @@ if __name__ == "__main__":
 
     trials = run_experiments({
         flow_params["exp_tag"]: {
-            "run": "PPO",
+            "run": "ES",
             "env": env_name,
             "config": {
                 **config
             },
-            "checkpoint_freq": 20,
+            "checkpoint_freq": 1,
             "max_failures": 999,
             "stop": {
-                "training_iteration": 400,
+                # "training_iteration": 400,
+                "training_iteration": 25,
             },
             "trial_resources": {
                 "cpu": 1,
                 "gpu": 0,
-                "extra_cpu": PARALLEL_ROLLOUTS - 1,
+                # "extra_cpu": PARALLEL_ROLLOUTS - 1,
             },
+            "upload_dir": "s3://kathy.experiments/rllib/experiments",
         }
     })
